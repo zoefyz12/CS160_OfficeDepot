@@ -1,0 +1,52 @@
+{
+  "name": "react-template",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^3.9.2",
+    "bootstrap": "^4.3.1",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "google-map-react": "^1.1.4",
+    "google-maps-react": "^2.0.2",
+    "googlemap": "^1.0.4",
+    "jquery": "^3.3.1",
+    "mdbreact": "^4.12.0",
+    "node-sass": "^4.11.0",
+    "pg": "^7.10.0",
+    "popper.js": "^1.14.7",
+    "react": "^16.8.2",
+    "react-bootstrap": "^1.0.0-beta.5",
+    "react-cookie": "^3.1.2",
+    "react-cookies": "^0.1.0",
+    "react-dom": "^16.8.2",
+    "react-google-maps": "^9.4.5",
+    "react-phone-number-input": "^2.3.11",
+    "react-router": "^5.0.0",
+    "react-router-dom": "^5.0.0",
+    "react-scripts": "^2.1.8",
+    "react-star-rating": "^1.4.2",
+    "react-star-ratings": "^2.3.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "index.js",
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

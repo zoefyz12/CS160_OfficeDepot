@@ -1,0 +1,46 @@
+.managerpicsize {
+    width: 100px;
+    height: 100px;
+}
+.Mlogo{
+    margin-top: 0;
+}
+
+th{
+    text-align: center;
+}
+
+.itemNum{
+    width: 2%;
+}
+
+.itemName{
+    width: 60%;
+}
+
+.itemPic{
+    width: 20%;
+}
+
+.itemDelete{
+    width: 14%;
+}
+
+.table > tbody > tr > td {
+    vertical-align: middle;
+}
+
+.cell{
+    margin: 0 auto;
+    text-align: center;
+}
+
+.inner_button {
+    display: block;
+    margin: auto;
+}
+
+.glyphicon-trash{
+    color: red;
+}
+

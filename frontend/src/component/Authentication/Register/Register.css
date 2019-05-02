@@ -1,0 +1,37 @@
+
+.register-header {
+    text-align:center;
+    margin-bottom: bottom 30px;
+}
+
+.register-header h1{
+    margin-top: 20px;
+    padding: 0 0 20px;
+    font-size: 36px;
+}
+  
+.register-box {
+    padding: 30px;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    background-clip: padding-box;
+    margin-top: 30px; 
+    background-color: #ffffff;
+}
+
+.register-box h2{
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.register-box h6{
+    font-size: 17px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.submitbutton{
+    margin-top:40px;
+    text-align:center;
+}

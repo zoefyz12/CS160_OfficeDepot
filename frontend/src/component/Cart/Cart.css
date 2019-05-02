@@ -1,0 +1,66 @@
+.cell{
+    margin-left: 0px;
+    margin-right: 0px;
+}
+.CartImgSize{
+    width: 130px;
+    height: 130px;
+}
+
+.padTotal{
+    padding-top: 50px;
+    padding-bottom: 20px;
+    padding-right: 32px;
+}
+
+.header{
+    display: inline-block;
+}
+
+.padButton{
+    float: right;
+}
+
+.glyphicon:before {
+    margin-right: 5px;
+}
+
+.panel-title {
+    margin-bottom: 50px;
+}
+
+.panel-empty {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    background:#DCDCDC;
+}
+
+.panel-footer h6{
+    font-size: 16px;
+    opacity: 0.6;
+}
+
+.logo {
+    margin-bottom: 20px;
+}
+
+.panel {
+    padding: 10px;
+}
+
+.itemName {
+    width: 50%;
+}
+
+.itemColLarge {
+    width: 10%;
+}
+
+.itemColSmall {
+    width: 5%;
+}
+
+.cell{
+    margin: 0 auto;
+    text-align: center;
+}

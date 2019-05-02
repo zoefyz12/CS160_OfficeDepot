@@ -1,0 +1,23 @@
+.cardContent {
+   width: 200px;
+   height: 250px;
+   margin: 20px;
+   display: inline-block;
+  position: relative;
+ }
+.cardContent:hover{
+  font-weight: bold;
+}
+.picsize{
+  top: 0;
+  width: 200px;
+  height: 200px;
+  display: block;
+}
+.picsize:hover {
+  border: 1px solid gainsboro;
+}
+.short-description{
+  font-size: 10px;
+  text-align: center;
+}

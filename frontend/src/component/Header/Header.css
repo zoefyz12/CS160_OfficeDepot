@@ -1,0 +1,46 @@
+.bg-dark{
+    background-color: #37474f !important;
+}
+.navbar-expand {
+    justify-content: flex-end;
+}
+.logo{
+    margin-top: 15px;
+}
+.dropdown-item.active, .dropdown-item:active {
+    color: #fff;
+    text-decoration: none;
+    background-color: #c62828;
+}
+.vertical-menu {
+    margin-top: 50px;
+    position: absolute;
+    left: 0;
+    top: 200px;
+    width: 150px; /* Set a width if you like */
+    font-size: small;
+}
+
+.vertical-menu a {
+    background-color: #eee; /* Grey background color */
+    color: black; /* Black text color */
+    display: block; /* Make the links appear below each other */
+    padding: 12px; /* Add some padding */
+    text-decoration: none; /* Remove underline from links */
+}
+
+.vertical-menu a:hover {
+    background-color: #c62828; /* Dark grey background on mouse-over */
+}
+
+.vertical-menu a.active {
+    background-color: #c62828; /* Add a green color to the "active/current" link */
+    color: white;
+}
+
+
+.cardBox {
+    width: 100%;
+    padding-left: 200px;
+    padding-right: 50px;
+}
