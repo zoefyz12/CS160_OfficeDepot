@@ -159,8 +159,6 @@ const loginUser = (request, response) => {
 				var salt = result.salt;
 				var passHash = saltHashPassword(password,salt).passwordHash;
 				var actualPass = result.password;
-				console.log(actualPass);
-				console.log(passHash);
 				if (passHash === actualPass)
 				{
 					let token = jwtauth.generate({email: email});
@@ -216,7 +214,11 @@ const addItem = (request, response) =>{
 	const {warehouseid, quantity, price, name, weight, description, category, url} = request.body;
 	getDatabase('SELECT itemid, quantity from items WHERE name = $1', [name],(t)=>
 	{
-		if (t === undefined)
+		if (price < 0)
+		{
+			response.status(404).json("Price goes below zero");
+		}
+		else if (t === undefined)
 		{
 			setDatabase('INSERT INTO items (warehouseid, quantity, price, name, weight, description, category,url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
 				[warehouseid, quantity, price, name, weight, description, category, url],(result)=>
@@ -228,10 +230,16 @@ const addItem = (request, response) =>{
 		{
 			var itemid = t.itemid;
 			var oldQuantity = t.quantity;
-			setDatabase("UPDATE items SET price = $1, quantity = $2 WHERE itemid = $3",[price,oldQuantity + quantity, itemid], (t1)=>{
-				response.status(200).json("Successfully changed price and quantity of the existing item");
-			});
-
+			var newQuantity = oldQuantity + quantity;
+			if (newQuantity < 0)
+			{
+				response.status(404).json("The quantity goes below zero");
+			}
+			else {
+				setDatabase("UPDATE items SET price = $1, quantity = $2 WHERE itemid = $3", [price, oldQuantity + quantity, itemid], (t1) => {
+					response.status(200).json("Successfully changed price and quantity of the existing item");
+				});
+			}
 
 		}
 	});
@@ -334,51 +342,74 @@ const submitOrder = (request, response) => {
 	var priorities = [];
 	for (var i = 0; i < itemids.length; i++)
 		priorities.push(priority);
+	var qrcheck = "WITH Tmp(id) AS (VALUES" + helperAvailable(itemids) + ")";
+	qrcheck += " SELECT itemid, quantity from items WHERE itemid IN (SELECT id from Tmp)";
+	getDatabase(qrcheck, "", (temp)=>
+	{
+		var ids = [];
+		for (var i = 0; i < temp.length; i++)
+		{
+			if (temp[i].quantity < quantities[i])
+			{
+				ids.push(temp[i].itemid);
+			}
+		}
+		if (ids.length > 0)
+		{
+			response.status(404).json(ids);
+		}
+		else
+		{
+			setDatabase(qr, [],
+				(result) => {
+					setDatabase("INSERT INTO orders (userid, shipadd, phone, totalprice, orderdate, status, priority, warehouseid) VALUES (?,?,?,?,?,?,?,?)",
+						[userid,shipaddress, phone, totalprice, timestamp, "processing",priority,warehouseid], (t)=>{
+							getDatabase("SELECT orderid FROM orders WHERE userid = " + userid, "",(t1)=>{
+								if (t1 === undefined)
+								{
+									response.status(404).json("Out of stock, need to check your shopping cart again");
+								}
+								else {
+									var orderid = t1[t1.length-1].orderid;
+									var values = getpair2(orderid,itemids,warehousenums,quantities,priority);
+									setDatabase("INSERT INTO itemsinorder (orderid, itemid, warehousenum, quantity,status) VALUES " + values,
+										[],(t)=>{
+											getDatabase("SELECT itemid FROM itemsinorder WHERE status = 'processing' AND orderid = " + orderid,[],(t5)=>{
+												if (t5 === undefined)
+												{
+													setDatabase("UPDATE orders SET status = 'delivered' WHERE orderid = ?",[orderid],(t6)=>{
 
-	setDatabase(qr, [],
-		(result) => {
-			setDatabase("INSERT INTO orders (userid, shipadd, phone, totalprice, orderdate, status, priority, warehouseid) VALUES (?,?,?,?,?,?,?,?)",
-				[userid,shipaddress, phone, totalprice, timestamp, "processing",priority,warehouseid], (t)=>{
-					getDatabase("SELECT orderid FROM orders WHERE userid = " + userid, "",(t1)=>{
-						if (t1 === undefined)
-						{
-							response.status(200).json("Cannot get orders");
-						}
-						else {
-							var orderid = t1[t1.length-1].orderid;
-							var values = getpair2(orderid,itemids,warehousenums,quantities,priority);
-							setDatabase("INSERT INTO itemsinorder (orderid, itemid, warehousenum, quantity,status) VALUES " + values,
-								[],(t)=>{
-									getDatabase("SELECT itemid FROM itemsinorder WHERE status = 'processing' AND orderid = " + orderid,[],(t5)=>{
-										if (t5 === undefined)
-										{
-											setDatabase("UPDATE orders SET status = 'delivered' WHERE orderid = ?",[orderid],(t6)=>{
-
+													});
+												}
 											});
-										}
-									});
-									getDatabase("SELECT userid FROM useraddress WHERE userid = $1", [userid], (t3)=>{
-										if (t3 === undefined)
-										{
-											setDatabase("INSERT INTO useraddress (userid, address, city, state,zip) VALUES (?,?,?,?,?)",
-												[userid,address,city,state,zip],(t4)=> {
-													var result = {"orderid": orderid}
-													response.status(200).json(result);
-												});
-										}
-										else
-										{
-											setDatabase("UPDATE useraddress SET address = ?, city = ?, state = ?, zip = ? WHERE userid = ?",
-												[address,city,state,zip,userid],(t4)=> {
-													response.status(200).json({"orderid": orderid});
-												});
-										}
-									});
-								});
-						}
-					});
+											getDatabase("SELECT userid FROM useraddress WHERE userid = $1", [userid], (t3)=>{
+												if (t3 === undefined)
+												{
+													setDatabase("INSERT INTO useraddress (userid, address, city, state,zip) VALUES (?,?,?,?,?)",
+														[userid,address,city,state,zip],(t4)=> {
+															var result = {"orderid": orderid}
+															response.status(200).json(result);
+														});
+												}
+												else
+												{
+													setDatabase("UPDATE useraddress SET address = ?, city = ?, state = ?, zip = ? WHERE userid = ?",
+														[address,city,state,zip,userid],(t4)=> {
+															response.status(200).json({"orderid": orderid});
+														});
+												}
+											});
+										});
+								}
+							});
+						});
 				});
-		});
+
+		}
+	});
+
+
+
 }
 
 
@@ -438,7 +469,7 @@ const getShipAddress = (request, response) =>
 {
 	getDatabase("SELECT orderid, shipadd, priority, orderdate, warehouseid FROM orders WHERE status= " + "'processing'", "",
 		(result)=>{
-			if (result === undefined)
+            if (result === undefined)
 			{
 				response.status(404).json(`There are no orders that need to be delivered`);
 			}
@@ -489,6 +520,10 @@ const getShipAddress = (request, response) =>
 							day_2.push(result[i]);
 						}
 					}
+                    if (day_2.length > 4)
+                    {
+                        break;
+                    }
 				}
 				var idfinal = 2;
 				if (three > 0)
@@ -503,11 +538,26 @@ const getShipAddress = (request, response) =>
 				{
 					idfinal = 1;
 				}
+                var orderids = [];
 				for (var i = 0; i < day_2.length; i++)
 				{
 					day_2[i].warehouseid = idfinal;
+                    orderids.push(day_2[i].orderid);
 				}
-				response.status(200).json(day_2);
+                if (day_2.length < 1)
+                {
+                    response.status(404).json("There are no orders that need to be delivered");        
+                }
+                else
+                {
+                    var qr5 = "WITH Tmp(orderid) AS (VALUES" + helperAvailable(orderids) + ")";
+                    setDatabase(qr5+"UPDATE orders set status = 'delivering' WHERE orderid IN (SELECT orderid FROM Tmp)",[],(t5)=>
+                    {
+                        response.status(200).json(day_2);       
+                    });    
+                }
+                
+				
 			}
 		});
 }
@@ -516,28 +566,36 @@ const markDelivered = (request, response) =>
 {
 
 	const {orderids} = request.body;
-	var qr = "WITH Tmp(orderid) AS (VALUES" + helperAvailable(orderids) + ")";
-	var qr0 = qr + " SELECT * FROM orders WHERE orderid IN (SELECT orderid FROM Tmp)";
-	qr0 = "WITH history AS (" + qr0 + ") SELECT orderid, status FROM history WHERE status = 'processing'";
-	var qr1 = qr + " UPDATE itemsinorder SET status = 'delivered' WHERE orderid IN (SELECT orderid FROM Tmp)";
-	var qr2 = qr + " UPDATE orders SET status = 'delivered' WHERE orderid IN (SELECT orderid FROM Tmp)";
+    if (orderids.length < 1)
+    {
+        response.status(404).json("Some of the orderid does not need to be updated");
+    }
+    else
+    {
+        var qr = "WITH Tmp(orderid) AS (VALUES" + helperAvailable(orderids) + ")";
+        var qr0 = qr + " SELECT * FROM orders WHERE orderid IN (SELECT orderid FROM Tmp)";
+        qr0 = "WITH history AS (" + qr0 + ") SELECT orderid, status FROM history WHERE status = 'delivering'";
+        var qr1 = qr + " UPDATE itemsinorder SET status = 'delivered' WHERE orderid IN (SELECT orderid FROM Tmp)";
+        var qr2 = qr + " UPDATE orders SET status = 'delivered' WHERE orderid IN (SELECT orderid FROM Tmp)";
 
-	getDatabase(qr0,"",(t1)=>{
-		if (t1.length != orderids.length)
-		{
-			response.status(404).json("Some of the orderid does not need to be updated");
-		}
-		else
-		{
-			setDatabase(qr1,[],(t)=>{
-				setDatabase(qr2,[],(t6)=>{
-					response.status(200).json("Update status sucessfully");
-				});
-			});
+        getDatabase(qr0,"",(t1)=>{
+            if (t1.length != orderids.length)
+            {
+                response.status(404).json("Some of the orderid does not need to be updated");
+            }
+            else
+            {
+                setDatabase(qr1,[],(t)=>{
+                    setDatabase(qr2,[],(t6)=>{
+                        response.status(200).json("Update status sucessfully");
+                    });
+                });
 
-		}
-	});
-
+            }
+        });
+        
+    }
+	
 
 }
 
@@ -561,25 +619,131 @@ const deleteItem = (request, response) =>
 		}
 	});
 
-	// response.status(200).json("hahah");
-	// getDatabase(qr1,"",(t1)=>
-	// {
-	// 	if (t1.length != itemids.length)
-	// 	{
-	// 		response.status(404).json("Some of the item ids are not in the database!");
-	// 	}
-	// 	else
-	// 	{
-	// 		//
-	// 		setDatabase(qr0,[],(t)=>
-	// 		{
-	//
-	// 			response.status(200).json("Successfully deleted the items");
-	//
-	// 		});
-	// 	}
-	// });
+
+
 }
+
+const addShoppingCart = (request, response) =>
+{
+
+	const {userid, itemid} = request.body;
+	getDatabase("SELECT cartid, quantity FROM shoppingcart WHERE userid = $1 AND itemid = $2" ,[userid, itemid],(t)=>
+	{
+		var quantity = 1;
+		if (t === undefined)
+		{
+			setDatabase("INSERT INTO shoppingcart (userid, itemid, quantity) VALUES (?,?,?)", [userid,itemid,quantity], (t)=>{
+				response.status(200).json("Succesfully add item into shopping cart");
+			});
+		}
+		else
+		{
+			var id = (t).cartid;
+			var newQuantity = t.quantity + quantity;
+			setDatabase("UPDATE shoppingcart SET  quantity = $1 WHERE cartid = $2",[newQuantity, id],(t1)=>
+			{
+				response.status(200).json("Sucessfully add item into shopping cart");
+			});
+
+		}
+	});
+}
+
+
+const editShoppingCart = (request, response) =>
+{
+
+	const {userid, itemid, quantity} = request.body;
+	getDatabase("SELECT cartid FROM shoppingcart WHERE userid = $1 AND itemid = $2" ,[userid, itemid],(t)=>
+	{
+		if (quantity <= 0)
+		{
+			response.status(404).json("Invalid quantity");
+		}
+		else if (t === undefined)
+		{
+			setDatabase("INSERT INTO shoppingcart (userid, itemid, quantity) VALUES (?,?,?)", [userid,itemid,quantity], (t)=>{
+				response.status(200).json("Succesfully add item into shopping cart");
+			});
+		}
+		else
+		{
+			var id = (t).cartid;
+			setDatabase("UPDATE shoppingcart SET  quantity = $1 WHERE cartid = $2",[quantity, id],(t1)=>
+			{
+				response.status(200).json("Sucessfully add item into shopping cart");
+			});
+
+		}
+	});
+}
+
+const deleteShoppingCart = (request, response) =>
+{
+
+	const {userid, itemid} = request.body;
+	getDatabase("SELECT cartid FROM shoppingcart WHERE userid = $1 AND itemid = $2" ,[userid, itemid],(t)=>
+	{
+		var id = t.cartid;
+		if (t === undefined)
+		{
+			response.status(404).json("There is no item to delete");
+		}
+		else
+		{
+			setDatabase("DELETE FROM shoppingcart WHERE cartid = $1",[id],(t1)=>
+			{
+				response.status(200).json("Sucessfully delete item from shopping cart");
+			});
+
+		}
+	});
+}
+
+const getShoppingCart = (request, response) =>
+{
+
+	const {userid} = request.body;
+	getDatabase("SELECT itemid, quantity FROM shoppingcart WHERE userid = " + userid ,"",(t)=>
+	{
+		if (t === undefined || t.length < 1)
+		{
+			response.status(404).json("There is no item in the shopping cart");
+		}
+		else
+		{
+			var items = [];
+			for (var i = 0; i < t.length; i++)
+			{
+				items.push(t[i].itemid);
+			}
+			var qr = "WITH Tmp(itemid) AS (VALUES" + helperAvailable(items) + ")";
+			getDatabase(qr + "SELECT itemid, name, weight, warehouseid, price, url FROM items WHERE itemid IN (SELECT itemid FROM Tmp)", "", (t1)=>
+			{
+				for (var i = 0; i < t1.length; i++)
+				{
+					t1[i].quantityInCart = t[i].quantity;
+				}
+				response.status(200).json(t1);
+			});
+
+		}
+	});
+}
+
+
+const deleteWholeShoppingCart = (request, response) =>
+{
+
+	const {userid} = request.body;
+	setDatabase("DELETE FROM shoppingcart WHERE userid = $1" ,[userid],(t)=>
+	{
+		response.status(200).json("Successfully delete the whole shopping cart");
+	});
+}
+
+
+
 
 
 // const setPrice = (request, response) =>
@@ -645,5 +809,10 @@ module.exports = {
 	getOrderHistoryDetail,
 	getShipAddress,
 	markDelivered,
-	deleteItem
+	deleteItem,
+	addShoppingCart,
+	deleteShoppingCart,
+	getShoppingCart,
+	deleteWholeShoppingCart,
+	editShoppingCart
 }

@@ -178,6 +178,81 @@ class UserService {
             return resp.json();
         });
     }
+    addShoppingCart(postBody) {
+        let url = this.endpoint + '/addShoppingCart';
+        return fetch(url, {
+            method: 'POST',
+            body: postBody,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((resp) => {
+            if (!resp.ok) {
+                throw Error('Cannot add to Shopping Cart/Please log in');
+            }
+            return resp.json();
+        });
+    }
+    getShoppingCart(postBody) {
+        let url = this.endpoint + '/getShoppingCart';
+        return fetch(url, {
+            method: 'POST',
+            body: postBody,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((resp) => {
+            if (!resp.ok) {
+                throw Error('Nothing in Shopping Cart/Please log in');
+            }
+            return resp.json();
+        });
+    }
+    deleteShoppingCart(postBody) {
+        let url = this.endpoint + '/deleteShoppingCart';
+        return fetch(url, {
+            method: 'POST',
+            body: postBody,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((resp) => {
+            if (!resp.ok) {
+                throw Error('Cannot delete item');
+            }
+            return resp.json();
+        });
+    }
+    deleteWholeShoppingCart(postBody) {
+        let url = this.endpoint + '/deleteWholeShoppingCart';
+        return fetch(url, {
+            method: 'POST',
+            body: postBody,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((resp) => {
+            if (!resp.ok) {
+                throw Error('Cannot delete whole item');
+            }
+            return resp.json();
+        });
+    }
+    editShoppingCart(postBody) {
+        let url = this.endpoint + '/editShoppingCart';
+        return fetch(url, {
+            method: 'POST',
+            body: postBody,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((resp) => {
+            if (!resp.ok) {
+                throw Error('Cannot edit quantity of the item');
+            }
+            return resp.json();
+        });
+    }
 
 }
 

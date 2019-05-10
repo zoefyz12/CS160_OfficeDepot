@@ -32,6 +32,11 @@ app.post('/getOrderHistoryDetail', jwtauth.validate,db.getOrderHistoryDetail);
 app.post('/getShipAddress', jwtauth.validate,db.getShipAddress);
 app.post('/markDelivered', jwtauth.validate,db.markDelivered);
 app.post('/deleteItem', jwtauth.validate, db.deleteItem);
+app.post('/addShoppingCart', jwtauth.validate, db.addShoppingCart);
+app.post('/deleteShoppingCart', jwtauth.validate, db.deleteShoppingCart);
+app.post('/getShoppingCart', jwtauth.validate, db.getShoppingCart);
+app.post('/deleteWholeShoppingCart', jwtauth.validate, db.deleteWholeShoppingCart);
+app.post('/editShoppingCart', jwtauth.validate, db.editShoppingCart);
 
 app.listen(port, () => {
 	console.log(`App running on port ${port}.`);

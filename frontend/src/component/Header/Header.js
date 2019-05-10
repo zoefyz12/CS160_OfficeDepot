@@ -216,7 +216,7 @@ class Header extends Component {
                     {
                         this.state.nameData.map((val, index) => {
                             return (
-                                <Card cardName={val.name} cardUrl={val.url} cardId={val.itemid} key={index}/>
+                                <Card cardName={val.name} cardUrl={val.url} cardId={val.itemid} cardPrice={val.price} key={index}/>
                             )
                         })
                     }

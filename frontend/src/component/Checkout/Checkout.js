@@ -36,22 +36,20 @@ class Checkout extends Component {
         console.log(today,"today")
     }
 
-        shippingAddressSubmit = (event) => {
+    shippingAddressSubmit = (event) => {
 
-            this.setState({
-                showShippingMethodStep: true,
-                shippingDisable: true,
-                firstName: event.target.fname.value,
-                lastName: event.target.lname.value,
-                address: event.target.address.value,
-                city: event.target.city.value,
-                state: event.target.state.value,
-                zip: event.target.zipcode.value,
-                phone: event.target.phone.value,
-            });
-            event.preventDefault();
-
-
+        this.setState({
+            showShippingMethodStep: true,
+            shippingDisable: true,
+            firstName: event.target.fname.value,
+            lastName: event.target.lname.value,
+            address: event.target.address.value,
+            city: event.target.city.value,
+            state: event.target.state.value,
+            zip: event.target.zipcode.value,
+            phone: event.target.phone.value,
+        });
+        event.preventDefault();
 
     };
 
@@ -65,36 +63,56 @@ class Checkout extends Component {
         //     console.log(UserStoreService.getTotalPrice(), "new total price")
         // }
 
-        let body = {
-            authorization: UserStoreService.getToken(),
-            userid: UserStoreService.getUserId(),
-            firstname: this.state.firstName,
-            lastname: this.state.lastName,
-            address: this.state.address,
-            city: this.state.city,
-            state: this.state.state,
-            zip: this.state.zip,
-            phone: this.state.phone,
-            totalprice: UserStoreService.getTotalPrice(),
-            itemids: UserStoreService.getItemId(),
-            quantities: UserStoreService.getQuantities(),
-            priority: this.state.priority,
-            warehousenums: UserStoreService.getWareHouseId(),
-            timestamp: new Date().toLocaleDateString(),
-        };
+        if(parseInt(document.getElementById("month").value) < new Date().getMonth()+1)
+        {
+            alert("Sorry, the credit card is expired")
+        }
 
-        console.log(body,"orderSubmit body")
-        userService.submitOrder(JSON.stringify(body)).then((data) => {
-            console.log(data);
+        else {
+            let body = {
+                authorization: UserStoreService.getToken(),
+                userid: UserStoreService.getUserId(),
+                firstname: this.state.firstName,
+                lastname: this.state.lastName,
+                address: this.state.address,
+                city: this.state.city,
+                state: this.state.state,
+                zip: this.state.zip,
+                phone: this.state.phone,
+                totalprice: UserStoreService.getTotalPrice(),
+                itemids: UserStoreService.getItemId(),
+                quantities: UserStoreService.getQuantities(),
+                priority: this.state.priority,
+                warehousenums: UserStoreService.getWareHouseId(),
+                timestamp: new Date().toLocaleDateString(),
+            };
 
-            alert('Order Submitted');
-            this.props.history.push('/')
-            UserStoreService.setShoppingCart(this.state.renew);
-            UserStoreService.setTotalPrice(null);
-        }).catch((error) => {
-            alert(error.message);
-        });
-        console.log(this.state.firstName,"fname")
+            console.log(body, "orderSubmit body")
+            userService.submitOrder(JSON.stringify(body)).then((data) => {
+                console.log(data);
+
+                alert('Order Submitted');
+                this.props.history.push('/')
+                UserStoreService.setShoppingCart(this.state.renew);
+                UserStoreService.setTotalPrice(null);
+
+
+                console.log(UserStoreService.getUserId(),"userId")
+                let body = {
+                    authorization: UserStoreService.getToken(),
+                    userid: UserStoreService.getUserId(),
+                }
+                userService.deleteWholeShoppingCart(JSON.stringify(body)).then((data) => {
+
+                }).catch((error) => {
+                    //  alert(error.message);
+                });
+            }).catch((error) => {
+                alert(error.message);
+            });
+            console.log(this.state.firstName, "fname")
+
+        }
 
 
     };
@@ -108,57 +126,53 @@ class Checkout extends Component {
         }
         else
             this.setState({shippingMethodDisable: true, submitDeliveryMethod: true, showPaymentStep: true});
-        if(this.state.pickup === "1") // Over $100, Free
+        if(this.state.pickup === "1")   // Free Shipping
         {
+            this.setState({
+                priority: 3      // 2 day truck
+            })
+        }
+        if(this.state.pickup === "2")   // 1 Day Shipping (Total Price over $100)
+        {
+            if(UserStoreService.getTotalWeight() >= 15) 
+            {
+                this.setState({
+                    priority: 2  // 1 day truck
+                })
+                UserStoreService.setTotalPrice((parseFloat(UserStoreService.getTotalPrice()) + 25).toFixed(2));
+            }
+            else   // Free Shipping                                   
+            {
+                this.setState({
+                    priority: 0  // 1 day drone
+                })
+            }
+
+        }
+        if(this.state.pickup === "3")   // Free Self-pickup at Warehouse (Always available option)
+        {
+            this.setState({
+                priority: 1  
+            })
+
+        }
+        if(this.state.pickup === "4")   // $20 Shipping
+        {
+            UserStoreService.setTotalPrice((parseFloat(UserStoreService.getTotalPrice()) + 20).toFixed(2));
             if(UserStoreService.getTotalWeight() >= 15)
             {
                 this.setState({
-                    priority: 3  // Free 2-day truck
+                    priority: 3  // 2 day truck 
                 })
             }
             else{
                 this.setState({
-                    priority: 0  // Free 1-day drone 
-                })
-            }
-        }
-        if(this.state.pickup === "2")  // Over $100,  Pay
-        {
-
-            UserStoreService.setTotalPrice(parseFloat(UserStoreService.getTotalPrice()) + 25);
-            this.setState({
-                priority: 2  // Pay $25 for 1-day truck
-            })
-
-        }
-        if(this.state.pickup === "3")  // Free Self-pickup at warehouse
-        {
-            this.setState({
-                priority: 1 
-            })
-
-        }
-        if(this.state.pickup === "4")  // Under $100
-        {
-            UserStoreService.setTotalPrice(parseFloat(UserStoreService.getTotalPrice()) + 20);
-            if(UserStoreService.getTotalWeight() >= 15)
-            {
-                this.setState({
-                    priority: 3  // Pay $20 for 2-day truck 
-                })
-            }
-            else{
-                this.setState({
-                    priority: 0  // Free 1-day drone
+                    priority: 0  // 1 day drone
                 })
             }
 
         }
-
-
         console.log(this.state.pickup)
-
-
     };
 
 
@@ -273,8 +287,7 @@ class Checkout extends Component {
                                         <td>
                                             <div className="radio">
                                                 <label><input type="radio" id='express' name="optradio"
-                                                            className="checkoutMargin" required disabled={this.state.shippingMethodDisable} onChange={()=>{this.setState({pickup: "3"});console.log("asdad")
-                                                            }}/>
+                                                            className="checkoutMargin" required disabled={this.state.shippingMethodDisable} onChange={()=>{this.setState({pickup: "3"});}}/>
                                                     <strong>Pick up in our Warehouse</strong>
                                                 </label>
                                             </div>
@@ -298,7 +311,7 @@ class Checkout extends Component {
                                                           className="checkoutMargin" required disabled={this.state.shippingMethodDisable} onChange={()=>{this.setState({pickup: "2"})}}/>
                                                 <strong>Everyday Free Shipping by Drone</strong>
                                             </label>
-                                            <p className="tab">Transit time: 1 business days</p>
+                                            <p className="tab">Transit time: 1 business day</p>
                                         </div>
                                     </td>
                                     <td>
@@ -313,8 +326,7 @@ class Checkout extends Component {
                                     <td>
                                         <div className="radio">
                                             <label><input type="radio" id='express' name="optradio"
-                                                          className="checkoutMargin" required disabled={this.state.shippingMethodDisable} onChange={()=>{this.setState({pickup: "3"});console.log("asdad")
-                                            }}/>
+                                                          className="checkoutMargin" required disabled={this.state.shippingMethodDisable} onChange={()=>{this.setState({pickup: "3"});}}/>
                                                 <strong>Pick up in our Warehouse</strong>
                                             </label>
                                         </div>
@@ -330,7 +342,7 @@ class Checkout extends Component {
                                 }
 
 
-                                {this.state.under &&
+                                {this.state.under && this.state.overWeight && 
                                 <tbody>
 
                                 <tr>
@@ -341,6 +353,43 @@ class Checkout extends Component {
                                                 <strong>Standard Shipping</strong>
                                                 <p className="tab">Transit time: 2 business days</p>
                                             </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="price">
+                                            <label htmlFor='premium'>$20.00</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div className="radio">
+                                            <label><input type="radio" id='express' name="optradio"
+                                                        className="checkoutMargin" required disabled={this.state.shippingMethodDisable} onChange={()=>{this.setState({pickup: "3"})}}/>
+                                                <strong>Pick up in our Warehouse</strong>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div className="price">
+                                            <label htmlFor='express'>
+                                                <font color="red">FREE</font></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                                }
+
+                                {this.state.under && this.state.underWeight &&  
+                                <tbody>
+                                <tr>
+                                    <td>
+                                        <div className="radio">
+                                            <label><input type="radio" id='regular' name="optradio"
+                                                          className="checkoutMargin" required disabled={this.state.shippingMethodDisable} onChange={()=>{this.setState({pickup: "4"})}}/>
+                                                <strong>Standard Shipping by Drone</strong>
+                                            </label>
+                                            <p className="tab">Transit time: 1 business days</p>
                                         </div>
                                     </td>
                                     <td>
@@ -402,8 +451,8 @@ class Checkout extends Component {
 
 
                         <div className="form-group">
-                            <label htmlFor="cardnumber">Card Number (Twelve Digits)<span className="text-danger">*</span></label>
-                            <input  type="text" pattern="\d{12}" required
+                            <label htmlFor="cardnumber">Card Number (Sixteen Digits)<span className="text-danger">*</span></label>
+                            <input  type="text" pattern="\d{16}" required
                                     placeholder="Card Number" className="form-control"/>
                         </div>
 
@@ -411,7 +460,7 @@ class Checkout extends Component {
                             <div className="col-md-6">
                                 <label htmlFor="exp">Expiration Month<span className="text-danger">*</span></label>
                                 <Form>
-                                    <Form.Control as="select">
+                                    <Form.Control as="select" id="month">
                                         <option>01</option>
                                         <option>02</option>
                                         <option>03</option>
@@ -430,7 +479,7 @@ class Checkout extends Component {
                             <div className="col-md-6">
                                 <label htmlFor="exp">Year<span className="text-danger">*</span></label>
                                 <Form>
-                                    <Form.Control as="select">
+                                    <Form.Control as="select" id="year">
                                         <option>2019</option>
                                         <option>2020</option>
                                         <option>2021</option>
@@ -457,7 +506,7 @@ class Checkout extends Component {
                         </h3>
 
                         <div className="form-group submitbutton">
-                            <input type='submit' name='Submit' value="Create My Account" className="btn btn-danger"/>
+                            <input type='submit' name='Submit' value="Complete Order" className="btn btn-danger"/>
                         </div>
                         </form>
 

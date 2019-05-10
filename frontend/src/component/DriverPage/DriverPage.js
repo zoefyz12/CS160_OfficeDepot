@@ -13,7 +13,7 @@ class DriverPage extends Component {
     state = {
         clicked: false,
         start: true,
-
+        orders: [],
         addresses: [],
         open: false,
         driverOrderIds: [],
@@ -25,7 +25,8 @@ class DriverPage extends Component {
         let body = {
             authorization: UserStoreService.getToken()
         };
-
+        let order = "";
+        let orders = [];
         let address = "";
         let addresses = [];
         let driverOrderId = "";
@@ -38,10 +39,13 @@ class DriverPage extends Component {
                 address = data[i].shipadd;
                 addresses.push(address);
                 driverOrderId = data[i].orderid;
-                driverOrderIds.push(driverOrderId)
+                driverOrderIds.push(driverOrderId);
+                order = data[i].orderid;
+                orders.push(order);
             }
+            console.log("orders",orders);
 
-           this.setState({addresses: addresses, driverOrderIds: driverOrderIds, wareHouseId: data[0].warehouseid})
+           this.setState({addresses: addresses, driverOrderIds: driverOrderIds, orders: orders, wareHouseId: data[0].warehouseid})
 
         }).catch((error) => {
             alert(error.message);
@@ -116,12 +120,16 @@ clickHandler = (event,props) =>{
                         <table className="table table-bordered table-hover">
                             <thead>
                                 <tr>
-                                    <th className="text-center">Delivery Order Address List</th>
+                                    <th className="text-center">Order Number</th>
+                                    <th className="text-center">Address</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody> 
                                 {this.state.addresses.map((item, idx) => (
                                     <tr id="addr0" key={idx}>
+                                        <td>
+                                            {this.state.orders[idx]}
+                                        </td>
                                         <td>
                                             {this.state.addresses[idx]}
                                         </td>

@@ -44,8 +44,20 @@ class ProductDetail extends Component {
     addToShoppingcart = (event,itemid) => {
 
         userStoreService.addShoppingCartInfo(itemid);
-        console.log(userStoreService.getShoppingCart())
-        alert("Thanks to add this Item to the Shopping Cart")
+        console.log(userStoreService.getShoppingCart());
+        let body = {
+            authorization: userStoreService.getToken(),
+            userid: userStoreService.getUserId(),
+            itemid: this.props.match.params.productId,
+        };
+        userService.addShoppingCart(JSON.stringify(body)).then((data) => {
+            console.log(data);
+
+            alert("Thanks to add this Item to the Shopping Cart")
+
+        }).catch((error) => {
+            alert(error.message);
+        });
 
     };
 

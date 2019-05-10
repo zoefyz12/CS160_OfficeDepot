@@ -195,7 +195,7 @@ export default class GoogleMap extends Component{
 
     render() {
         return (
-            <div>   
+            <div class="container">   
                 <div id="map" />
                 <div id="right-panel" />
             </div>

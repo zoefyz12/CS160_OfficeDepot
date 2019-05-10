@@ -1,8 +1,8 @@
 .cardContent {
-   width: 200px;
-   height: 250px;
-   margin: 20px;
-   display: inline-block;
+  width: 200px;
+  height: 250px;
+  margin: 20px;
+  display: inline-block;
   position: relative;
  }
 .cardContent:hover{
@@ -18,6 +18,11 @@
   border: 1px solid gainsboro;
 }
 .short-description{
+  margin-top: 10px;
   font-size: 10px;
+  text-align: center;
+}
+.price{
+  font-size: 12px;
   text-align: center;
 }
