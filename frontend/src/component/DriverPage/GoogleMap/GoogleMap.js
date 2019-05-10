@@ -18,7 +18,7 @@ export default class GoogleMap extends Component{
 
     renderMap = () => {
         loadScript(
-            "https://maps.googleapis.com/maps/api/js?key=AIzaSyDc74IQbxDTgM54Dnk8SLb3Cr5yty2xz-c&callback=initMap"
+            "https://maps.googleapis.com/maps/api/js?key=APIKEY&callback=initMap"
         );
         console.log(this.state);
         window.initMap = this.initMap;
